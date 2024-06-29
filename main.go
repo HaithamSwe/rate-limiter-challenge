@@ -20,12 +20,21 @@ func NewRateLimiter(maxRequests int, timeWindow time.Duration) *RateLimiter {
 }
 
 func (r *RateLimiter) AllowRequest(userID string) bool {
-	// Implement logic to check if the request is allowed
-	return false
+	if userRequestsTimes, exists := r.userRecords[userID]; !exists || len(userRequestsTimes) < r.maxRequests {
+		return true
+	}
+
+	currentTime := time.Now()
+	for i := 1; i <= r.maxRequests; i++ {
+		if !r.userRecords[userID][len(r.userRecords[userID])-i].Before(currentTime.Add(-r.timeWindow)) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *RateLimiter) RecordRequest(userID string) {
-	// Implement logic to record a request
+	r.userRecords[userID] = append(r.userRecords[userID], time.Now())
 }
 
 func main() {
